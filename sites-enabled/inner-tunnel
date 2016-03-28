@@ -1,0 +1,73 @@
+server inner-tunnel {
+    listen {
+       ipaddr = 127.0.0.1
+       port = 18120
+       type = auth
+    }
+
+    authorize {
+	chap
+	mschap
+	suffix
+	update control {
+	       Proxy-To-Realm := LOCAL
+	}
+	eap {
+		ok = return
+	}
+
+	files
+
+	expiration
+	logintime
+
+	pap
+    }
+
+    authenticate {
+	#
+	#  PAP authentication, when a back-end database listed
+	#  in the 'authorize' section supplies a password.  The
+	#  password can be clear-text, or encrypted.
+	Auth-Type PAP {
+		pap
+	}
+
+	#
+	#  Most people want CHAP authentication
+	#  A back-end database listed in the 'authorize' section
+	#  MUST supply a CLEAR TEXT password.  Encrypted passwords
+	#  won't work.
+	Auth-Type CHAP {
+		chap
+	}
+
+	#
+	#  MSCHAP authentication.
+	Auth-Type MS-CHAP {
+		mschap
+	}
+	eap
+    }
+
+
+#  Session database, used for checking Simultaneous-Use. Either the radutmp 
+#  or rlm_sql module can handle this.
+#  The rlm_sql module is *much* faster
+    session {
+	radutmp
+    }
+
+
+#  Post-Authentication
+#  Once we KNOW that the user has been authenticated, there are
+#  additional steps we can take.
+
+    post-auth {
+	Post-Auth-Type REJECT {
+		# log failed authentications in SQL, too.
+		attr_filter.access_reject
+	}
+    }
+
+} # inner-tunnel server block
